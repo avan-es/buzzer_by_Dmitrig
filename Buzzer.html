@@ -1,0 +1,70 @@
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Buzzer</title>
+    <meta charset="UTF-8">
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: Arial; text-align: center; margin: 50px; }
+        #buzzer { width: 300px; height: 200px; font-size: 40px; background: #4CAF50; color: white; border: none; border-radius: 20px; cursor: pointer; }
+        #buzzer:disabled { background: #ccc; }
+        .winner { background: #FF5722 !important; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        #status { font-size: 24px; margin: 20px; }
+    </style>
+</head>
+<body>
+<h1>🔴 Quiz Buzzer</h1>
+<input id="room" placeholder="Введите код комнаты (4 символа)" maxlength="4" style="font-size:20px;padding:10px;">
+<input id="name" placeholder="Ваше имя" style="font-size:20px;padding:10px;">
+<br><br>
+<button id="join">Присоединиться</button>
+<br><br>
+<div id="status">Введите код комнаты и имя</div>
+<button id="buzzer" style="display:none;">🔴 НАЖМИ ПЕРВЫМ!</button>
+<div id="winner"></div>
+
+<script>
+    // ВСТАВЬТЕ СВОЙ firebaseConfig ЗДЕСЬ
+    const firebaseConfig = {
+        apiKey: "AIzaSyBzN0S7G_q0bDPmnB0YlyWKxbwTUAoqjCE",
+        authDomain: "buzzer-by-dmitrig.firebaseapp.com",
+        databaseURL: "https://buzzer-by-dmitrig-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "buzzer-by-dmitrig",
+        storageBucket: "buzzer-by-dmitrig.firebasestorage.app",
+        messagingSenderId: "322792763681",
+        appId: "1:322792763681:web:20017acae963fe31248e60"
+    };
+
+    document.getElementById('buzzer').onclick = () => {
+        const buzzerRef = db.ref(`buzzers/${roomId}`);
+        buzzerRef.transaction(current => {
+            if (!current) {
+                return { winner: playerName, time: Date.now(), locked: true };
+            }
+            return current;
+        });
+    };
+
+    function listenForBuzzer() {
+        const buzzerRef = db.ref(`buzzers/${roomId}`);
+        buzzerRef.on('value', snap => {
+            const data = snap.val();
+            const buzzerBtn = document.getElementById('buzzer');
+            if (data) {
+                document.getElementById('winner').innerHTML = `🏆 Победил: ${data.winner}!`;
+                buzzerBtn.disabled = true;
+                buzzerBtn.classList.add('winner');
+            } else {
+                buzzerBtn.disabled = false;
+                buzzerBtn.classList.remove('winner');
+                document.getElementById('winner').innerHTML = '';
+            }
+        });
+    }
+</script>
+</body>
+</html>
