@@ -136,19 +136,35 @@
             height: clamp(200px, 45vw, 280px);
             font-size: clamp(30px, 8vw, 48px);
             font-weight: 900;
-            background: linear-gradient(145deg, #ff4757, #ff3838);
             color: #fff;
             border: none;
             border-radius: 30px;
             cursor: pointer;
             box-shadow:
-                    0 25px 50px rgba(255, 71, 87, 0.4),
+                    0 25px 50px rgba(255, 255, 255, 0.3),
                     inset 0 8px 15px rgba(255,255,255,0.2);
             position: relative;
             overflow: hidden;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             touch-action: manipulation;
             display: none;
+        }
+
+        /* Белая кнопка - готовность к тыку */
+        #buzzer.ready {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            animation: readyGlow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes readyGlow {
+            from {
+                box-shadow: 0 25px 50px rgba(255, 255, 255, 0.4), inset 0 8px 15px rgba(255,255,255,0.3);
+                filter: drop-shadow(0 0 20px rgba(255,255,255,0.6));
+            }
+            to {
+                box-shadow: 0 35px 60px rgba(255, 255, 255, 0.6), inset 0 8px 15px rgba(255,255,255,0.4);
+                filter: drop-shadow(0 0 30px rgba(255,255,255,0.8));
+            }
         }
 
         #buzzer::before {
@@ -170,24 +186,24 @@
 
         #buzzer:hover:not(:disabled) {
             transform: translateY(-5px) scale(1.02);
-            box-shadow:
-                    0 35px 60px rgba(255, 71, 87, 0.6),
-                    inset 0 8px 15px rgba(255,255,255,0.3);
         }
 
-        #buzzer:disabled {
-            background: linear-gradient(145deg, #6c757d, #5a6268);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .winner {
-            background: linear-gradient(145deg, #ff6b35, #f7931e) !important;
+        /* Зеленая кнопка - победитель */
+        #buzzer.winner {
+            background: linear-gradient(145deg, #00ff88, #00cc66) !important;
             animation: pulse 0.7s infinite, shake 0.6s ease-in-out;
             box-shadow:
-                    0 0 60px #ff6b35,
-                    0 0 120px #ff6b35,
+                    0 0 60px #00ff88,
+                    0 0 120px #00ff88,
                     inset 0 8px 15px rgba(255,255,255,0.3) !important;
+            animation-duration: 0.7s, 0.6s;
+        }
+
+        /* Красная кнопка - проигравшие */
+        #buzzer.loser {
+            background: linear-gradient(145deg, #ff4757, #ff3838) !important;
+            cursor: not-allowed;
+            box-shadow: 0 15px 30px rgba(255, 71, 87, 0.3);
         }
 
         @keyframes pulse {
@@ -226,6 +242,42 @@
             backdrop-filter: blur(15px);
         }
 
+        /* Стили для мастер-режима очистки */
+        #clear-all-btn {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px 30px;
+            font-size: clamp(18px, 5vw, 22px);
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 15px 35px rgba(255, 20, 147, 0.4);
+            transition: all 0.3s ease;
+            min-height: 70px;
+            touch-action: manipulation;
+            margin-top: 10px;
+            animation: glow-pink 2s ease-in-out infinite alternate;
+        }
+
+        #clear-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 45px rgba(255, 105, 180, 0.6);
+        }
+
+        #clear-all-btn:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes glow-pink {
+            from { filter: drop-shadow(0 0 20px #ff1493); }
+            to { filter: drop-shadow(0 0 30px #ff69b4); }
+        }
+
         @supports (padding: max(0px)) {
             body { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
         }
@@ -244,7 +296,8 @@
 
 <div class="game-area">
     <div id="status">Введите код комнаты и имя</div>
-    <button id="buzzer">🔴 НАЖМИ ПЕРВЫМ!</button>
+    <button id="buzzer">МЕСТО ДЛЯ ТЫК</button>
+    <button id="clear-all-btn">🧹 ОЧИСТИТЬ ВСЕ КОМНАТЫ</button>
     <div id="winner"></div>
 </div>
 
@@ -265,6 +318,7 @@
     let roomId = '';
     let playerName = '';
     let audioContext;
+    let isMasterMode = false;
 
     function initAudio() {
         if (!audioContext) {
@@ -328,19 +382,68 @@
         });
     }
 
+    function playClearSound() {
+        initAudio();
+        const notes = [392, 349, 294];
+        notes.forEach((freq, index) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + index * 0.2);
+
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + index * 0.2);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + index * 0.2 + 0.2);
+
+            oscillator.start(audioContext.currentTime + index * 0.2);
+            oscillator.stop(audioContext.currentTime + index * 0.2 + 0.2);
+        });
+    }
+
+    document.getElementById('clear-all-btn').onclick = () => {
+        if (confirm('🧹 УВЕРЕНЫ? Это удалит ВСЕ комнаты из базы данных!')) {
+            playClearSound();
+            db.ref('buzzers').remove()
+                .then(() => {
+                    document.getElementById('status').innerHTML = '✅ ВСЕ КОМНАТЫ ОЧИЩЕНЫ!';
+                    document.getElementById('clear-all-btn').style.display = 'none';
+                    setTimeout(() => {
+                        document.getElementById('status').innerHTML = `✅ Подключено к комнате: <strong>${roomId}</strong>`;
+                    }, 3000);
+                })
+                .catch(error => {
+                    console.error('Ошибка очистки:', error);
+                    document.getElementById('status').innerHTML = '❌ Ошибка очистки!';
+                });
+        }
+    };
+
     document.getElementById('join').onclick = () => {
         playClickSound();
 
         roomId = document.getElementById('room').value.toUpperCase().trim();
         playerName = document.getElementById('name').value.trim() || 'Аноним';
 
-        if (roomId.length === 4) {
+        if (roomId === 'DMIT' && playerName === 'DMITRIG') {
+            isMasterMode = true;
+            document.getElementById('clear-all-btn').style.display = 'block';
+            document.getElementById('status').innerHTML = `🔧 МАСТЕР-РЕЖИМ АКТИВЕН: <strong>${roomId}</strong>`;
+            document.getElementById('buzzer').style.display = 'block';
+            document.getElementById('buzzer').textContent = 'МЕСТО ДЛЯ ТЫК';
+            document.getElementById('buzzer').className = 'ready';
+            listenForBuzzer();
+        } else if (roomId.length === 4) {
             document.getElementById('status').innerHTML = `✅ Подключено к комнате: <strong>${roomId}</strong>`;
             document.getElementById('buzzer').style.display = 'block';
+            document.getElementById('buzzer').textContent = 'МЕСТО ДЛЯ ТЫК';
+            document.getElementById('buzzer').className = 'ready';
             listenForBuzzer();
         } else {
             setTimeout(() => alert('❌ Код комнаты должен быть РОВНО 4 символа!'), 100);
             document.getElementById('room').focus();
+            return;
         }
     };
 
@@ -361,14 +464,27 @@
         buzzerRef.on('value', snap => {
             const data = snap.val();
             const buzzerBtn = document.getElementById('buzzer');
+
+            // Сброс классов
+            buzzerBtn.classList.remove('ready', 'winner', 'loser');
+
             if (data) {
                 playWinSound();
                 document.getElementById('winner').innerHTML = `🏆 ПОБЕДИЛ: <strong>${data.winner}</strong>`;
-                buzzerBtn.disabled = true;
-                buzzerBtn.classList.add('winner');
+
+                if (data.winner === playerName) {
+                    // Ты победитель - зеленая кнопка
+                    buzzerBtn.textContent = 'ТВОЙ ТЫК ПЕРВЫЙ!';
+                    buzzerBtn.classList.add('winner');
+                } else {
+                    // Ты проигравший - красная кнопка
+                    buzzerBtn.textContent = `УВЫ, ПЕРВЫЙ ТЫК ${data.winner}`;
+                    buzzerBtn.classList.add('loser');
+                }
             } else {
-                buzzerBtn.disabled = false;
-                buzzerBtn.classList.remove('winner');
+                // Никто не нажал - белая мерцающая кнопка
+                buzzerBtn.textContent = 'МЕСТО ДЛЯ ТЫК';
+                buzzerBtn.classList.add('ready');
                 document.getElementById('winner').innerHTML = '';
             }
         });
