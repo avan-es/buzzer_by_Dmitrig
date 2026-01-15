@@ -141,7 +141,7 @@
             border-radius: 30px;
             cursor: pointer;
             box-shadow:
-                    0 25px 50px rgba(255, 255, 255, 0.3),
+                    0 25px 50px rgba(69, 183, 209, 0.3),
                     inset 0 8px 15px rgba(255,255,255,0.2);
             position: relative;
             overflow: hidden;
@@ -150,20 +150,20 @@
             display: none;
         }
 
-        /* Белая кнопка - готовность к тыку */
+        /* Голубая кнопка - готовность к тыку */
         #buzzer.ready {
-            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            background: linear-gradient(145deg, #45b7d1, #4ecdc4);
             animation: readyGlow 1.5s ease-in-out infinite alternate;
         }
 
         @keyframes readyGlow {
             from {
-                box-shadow: 0 25px 50px rgba(255, 255, 255, 0.4), inset 0 8px 15px rgba(255,255,255,0.3);
-                filter: drop-shadow(0 0 20px rgba(255,255,255,0.6));
+                box-shadow: 0 25px 50px rgba(69, 183, 209, 0.4), inset 0 8px 15px rgba(255,255,255,0.3);
+                filter: drop-shadow(0 0 20px rgba(69, 183, 209, 0.6));
             }
             to {
-                box-shadow: 0 35px 60px rgba(255, 255, 255, 0.6), inset 0 8px 15px rgba(255,255,255,0.4);
-                filter: drop-shadow(0 0 30px rgba(255,255,255,0.8));
+                box-shadow: 0 35px 60px rgba(78, 205, 196, 0.6), inset 0 8px 15px rgba(255,255,255,0.4);
+                filter: drop-shadow(0 0 30px rgba(78, 205, 196, 0.8));
             }
         }
 
@@ -410,7 +410,7 @@
                     document.getElementById('status').innerHTML = '✅ ВСЕ КОМНАТЫ ОЧИЩЕНЫ!';
                     document.getElementById('clear-all-btn').style.display = 'none';
                     setTimeout(() => {
-                        document.getElementById('status').innerHTML = `✅ Подключено к комнате: <strong>${roomId}</strong>`;
+                        document.getElementById('status').innerHTML = `🔧 МАСТЕР-РЕЖИМ АКТИВЕН: <strong>${roomId}</strong>`;
                     }, 3000);
                 })
                 .catch(error => {
@@ -430,9 +430,7 @@
             isMasterMode = true;
             document.getElementById('clear-all-btn').style.display = 'block';
             document.getElementById('status').innerHTML = `🔧 МАСТЕР-РЕЖИМ АКТИВЕН: <strong>${roomId}</strong>`;
-            document.getElementById('buzzer').style.display = 'block';
-            document.getElementById('buzzer').textContent = 'МЕСТО ДЛЯ ТЫК';
-            document.getElementById('buzzer').className = 'ready';
+            // В мастер-режиме НЕ показываем кнопку тыка
             listenForBuzzer();
         } else if (roomId.length === 4) {
             document.getElementById('status').innerHTML = `✅ Подключено к комнате: <strong>${roomId}</strong>`;
@@ -466,25 +464,29 @@
             const buzzerBtn = document.getElementById('buzzer');
 
             // Сброс классов
-            buzzerBtn.classList.remove('ready', 'winner', 'loser');
+            if (buzzerBtn) {
+                buzzerBtn.classList.remove('ready', 'winner', 'loser');
+            }
 
             if (data) {
                 playWinSound();
                 document.getElementById('winner').innerHTML = `🏆 ПОБЕДИЛ: <strong>${data.winner}</strong>`;
 
-                if (data.winner === playerName) {
+                if (buzzerBtn && data.winner === playerName) {
                     // Ты победитель - зеленая кнопка
                     buzzerBtn.textContent = 'ТВОЙ ТЫК ПЕРВЫЙ!';
                     buzzerBtn.classList.add('winner');
-                } else {
+                } else if (buzzerBtn) {
                     // Ты проигравший - красная кнопка
                     buzzerBtn.textContent = `УВЫ, ПЕРВЫЙ ТЫК ${data.winner}`;
                     buzzerBtn.classList.add('loser');
                 }
             } else {
-                // Никто не нажал - белая мерцающая кнопка
-                buzzerBtn.textContent = 'МЕСТО ДЛЯ ТЫК';
-                buzzerBtn.classList.add('ready');
+                if (buzzerBtn) {
+                    // Никто не нажал - голубая мерцающая кнопка
+                    buzzerBtn.textContent = 'МЕСТО ДЛЯ ТЫК';
+                    buzzerBtn.classList.add('ready');
+                }
                 document.getElementById('winner').innerHTML = '';
             }
         });
