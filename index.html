@@ -1,34 +1,254 @@
-</body>
-</html>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Quiz Buzzer</title>
+    <title>🔴 Quiz Buzzer by DMITRIG</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ff4757">
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
     <style>
-        body { font-family: Arial; text-align: center; margin: 50px; }
-        #buzzer { width: 300px; height: 200px; font-size: 40px; background: #4CAF50; color: white; border: none; border-radius: 20px; cursor: pointer; }
-        #buzzer:disabled { background: #ccc; }
-        .winner { background: #FF5722 !important; animation: pulse 0.5s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        #status { font-size: 24px; margin: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            gap: 20px;
+        }
+
+        .logo-link {
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 12vw, 5rem);
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+            margin-bottom: 0;
+            transition: transform 0.3s ease;
+        }
+
+        h1:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 40px rgba(78, 205, 196, 0.8);
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px #ff6b6b); }
+            to { filter: drop-shadow(0 0 30px #4ecdc4); }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input {
+            width: 100%;
+            padding: 20px;
+            font-size: clamp(16px, 5vw, 20px);
+            font-family: 'Orbitron', monospace;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            color: #fff;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            min-height: 65px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 25px rgba(78, 205, 196, 0.5);
+            transform: scale(1.02);
+        }
+
+        input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        #join {
+            width: 100%; max-width: 400px;
+            padding: 20px 30px;
+            font-size: clamp(18px, 5vw, 22px);
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+            min-height: 70px;
+            touch-action: manipulation;
+        }
+
+        #join:active {
+            transform: scale(0.98);
+        }
+
+        #join:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 45px rgba(78, 205, 196, 0.6);
+        }
+
+        .game-area {
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #buzzer {
+            width: 100%; max-width: 400px;
+            height: clamp(200px, 45vw, 280px);
+            font-size: clamp(30px, 8vw, 48px);
+            font-weight: 900;
+            background: linear-gradient(145deg, #ff4757, #ff3838);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow:
+                    0 25px 50px rgba(255, 71, 87, 0.4),
+                    inset 0 8px 15px rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: manipulation;
+            display: none;
+        }
+
+        #buzzer::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s;
+        }
+
+        #buzzer:active::before {
+            left: 100%;
+        }
+
+        #buzzer:active {
+            transform: scale(0.98);
+        }
+
+        #buzzer:hover:not(:disabled) {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow:
+                    0 35px 60px rgba(255, 71, 87, 0.6),
+                    inset 0 8px 15px rgba(255,255,255,0.3);
+        }
+
+        #buzzer:disabled {
+            background: linear-gradient(145deg, #6c757d, #5a6268);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .winner {
+            background: linear-gradient(145deg, #ff6b35, #f7931e) !important;
+            animation: pulse 0.7s infinite, shake 0.6s ease-in-out;
+            box-shadow:
+                    0 0 60px #ff6b35,
+                    0 0 120px #ff6b35,
+                    inset 0 8px 15px rgba(255,255,255,0.3) !important;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        #status {
+            font-size: clamp(18px, 5vw, 28px);
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%; max-width: 400px;
+        }
+
+        #winner {
+            font-size: clamp(22px, 6vw, 36px);
+            font-weight: 700;
+            padding: 25px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.3);
+            width: 100%; max-width: 400px;
+            backdrop-filter: blur(15px);
+        }
+
+        @supports (padding: max(0px)) {
+            body { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        }
     </style>
 </head>
 <body>
-<h1>🔴 Quiz Buzzer</h1>
-<input id="room" placeholder="Введите код комнаты (4 символа)" maxlength="4" style="font-size:20px;padding:10px;">
-<input id="name" placeholder="Ваше имя" style="font-size:20px;padding:10px;">
-<br><br>
-<button id="join">Присоединиться</button>
-<br><br>
-<div id="status">Введите код комнаты и имя</div>
-<button id="buzzer" style="display:none;">🔴 НАЖМИ ПЕРВЫМ!</button>
-<div id="winner"></div>
+<a href="https://taplink.cc/dmitrig" target="_blank" rel="noopener noreferrer" class="logo-link">
+    <h1>DMITRIG</h1>
+</a>
+
+<div class="input-group">
+    <input id="room" placeholder="Код комнаты (4 символа)" maxlength="4">
+    <input id="name" placeholder="Ваше имя">
+    <button id="join">🚀 Присоединиться</button>
+</div>
+
+<div class="game-area">
+    <div id="status">Введите код комнаты и имя</div>
+    <button id="buzzer">🔴 НАЖМИ ПЕРВЫМ!</button>
+    <div id="winner"></div>
+</div>
 
 <script>
-    // ВСТАВЬТЕ СВОЙ firebaseConfig ЗДЕСЬ
     const firebaseConfig = {
         apiKey: "AIzaSyBzN0S7G_q0bDPmnB0YlyWKxbwTUAoqjCE",
         authDomain: "buzzer-by-dmitrig.firebaseapp.com",
@@ -39,7 +259,94 @@
         appId: "1:322792763681:web:20017acae963fe31248e60"
     };
 
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let roomId = '';
+    let playerName = '';
+    let audioContext;
+
+    function initAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playClickSound() {
+        initAudio();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    }
+
+    function playBuzzerSound() {
+        initAudio();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(180, audioContext.currentTime + 0.1);
+
+        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.8);
+    }
+
+    function playWinSound() {
+        initAudio();
+        const notes = [523, 659, 784];
+        notes.forEach((freq, index) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + index * 0.15);
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + index * 0.15);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + index * 0.15 + 0.15);
+
+            oscillator.start(audioContext.currentTime + index * 0.15);
+            oscillator.stop(audioContext.currentTime + index * 0.15 + 0.15);
+        });
+    }
+
+    document.getElementById('join').onclick = () => {
+        playClickSound();
+
+        roomId = document.getElementById('room').value.toUpperCase().trim();
+        playerName = document.getElementById('name').value.trim() || 'Аноним';
+
+        if (roomId.length === 4) {
+            document.getElementById('status').innerHTML = `✅ Подключено к комнате: <strong>${roomId}</strong>`;
+            document.getElementById('buzzer').style.display = 'block';
+            listenForBuzzer();
+        } else {
+            setTimeout(() => alert('❌ Код комнаты должен быть РОВНО 4 символа!'), 100);
+            document.getElementById('room').focus();
+        }
+    };
+
     document.getElementById('buzzer').onclick = () => {
+        playBuzzerSound();
+
         const buzzerRef = db.ref(`buzzers/${roomId}`);
         buzzerRef.transaction(current => {
             if (!current) {
@@ -55,7 +362,8 @@
             const data = snap.val();
             const buzzerBtn = document.getElementById('buzzer');
             if (data) {
-                document.getElementById('winner').innerHTML = `🏆 Победил: ${data.winner}!`;
+                playWinSound();
+                document.getElementById('winner').innerHTML = `🏆 ПОБЕДИЛ: <strong>${data.winner}</strong>`;
                 buzzerBtn.disabled = true;
                 buzzerBtn.classList.add('winner');
             } else {
@@ -65,6 +373,14 @@
             }
         });
     }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !roomId) {
+            document.getElementById('join').click();
+        }
+    });
+
+    document.addEventListener('click', initAudio, { once: true });
 </script>
 </body>
 </html>
